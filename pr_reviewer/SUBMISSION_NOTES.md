@@ -8,6 +8,7 @@ This package adds a dependency-free CLI agent that reviews a pull request diff a
 
 It supports:
 
+- A Claude Code sub-agent definition at `.claude/agents/pr-reviewer.md`
 - `claude-review --pr https://github.com/owner/repo/pull/123`
 - `.\claude-review.cmd --pr https://github.com/owner/repo/pull/123` on Windows
 - `python pr_reviewer/claude_review.py --pr https://github.com/owner/repo/pull/123`
@@ -33,6 +34,7 @@ The included samples were generated from real public GitHub PRs:
 - `claude-review`
 - `claude-review.cmd`
 - `claude-review.ps1`
+- `.claude/agents/pr-reviewer.md`
 - `pr_reviewer/claude_review.py`
 - `pr_reviewer/test_claude_review.py`
 - `pr_reviewer/README.md`

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from claude_review import build_diff_url, main, parse_diff, render_markdown
 
+ROOT = Path(__file__).resolve().parents[1]
 
 CODE_DIFF = """diff --git a/app/auth.py b/app/auth.py
 --- a/app/auth.py
@@ -92,6 +93,16 @@ def test_cli_writes_output_from_diff_file() -> None:
         assert "### Improvement Suggestions" in output
 
 
+def test_claude_sub_agent_contract_is_present() -> None:
+    agent = ROOT / ".claude" / "agents" / "pr-reviewer.md"
+    content = agent.read_text(encoding="utf-8")
+
+    assert "name: pr-reviewer" in content
+    assert "### Identified Risks" in content
+    assert "### Improvement Suggestions" in content
+    assert "### Confidence" in content
+
+
 if __name__ == "__main__":
     test_parse_diff_counts_files_and_lines()
     test_render_flags_code_without_tests()
@@ -99,4 +110,5 @@ if __name__ == "__main__":
     test_extensionless_readme_is_documentation()
     test_build_diff_url_accepts_github_pr_url()
     test_cli_writes_output_from_diff_file()
+    test_claude_sub_agent_contract_is_present()
     print("ok")

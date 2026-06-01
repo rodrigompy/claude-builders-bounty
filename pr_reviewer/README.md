@@ -2,6 +2,10 @@
 
 CLI agent that reviews a GitHub pull request diff and returns a structured Markdown review comment.
 
+This package also includes a Claude Code sub-agent definition at
+`.claude/agents/pr-reviewer.md` so the workflow can be invoked as a reusable
+agent in repositories that load local Claude agents.
+
 ## Setup
 
 No third-party dependencies are required.
@@ -55,3 +59,10 @@ python pr_reviewer/test_claude_review.py
 ```
 
 Sample outputs are included under `samples/`.
+
+## Claude Code Sub-Agent
+
+Copy or keep `.claude/agents/pr-reviewer.md` in a repository to expose a
+`pr-reviewer` sub-agent. The sub-agent delegates the repeatable diff parsing and
+Markdown rendering to `pr_reviewer/claude_review.py`, then returns a comment
+with the required summary, risks, suggestions, and confidence sections.
