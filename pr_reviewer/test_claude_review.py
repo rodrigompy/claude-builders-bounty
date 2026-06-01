@@ -77,6 +77,28 @@ def test_build_diff_url_accepts_github_pr_url() -> None:
     )
 
 
+def test_cli_rejects_post_comment_without_pr() -> None:
+    try:
+        main(["--diff-file", "sample.diff", "--post-comment", "--github-token", "token"])
+    except SystemExit as exc:
+        result = exc.code
+    else:
+        result = 0
+
+    assert result == 2
+
+
+def test_cli_rejects_post_comment_without_token() -> None:
+    try:
+        main(["--pr", "https://github.com/octocat/Hello-World/pull/6", "--post-comment"])
+    except SystemExit as exc:
+        result = exc.code
+    else:
+        result = 0
+
+    assert result == 2
+
+
 def test_cli_writes_output_from_diff_file() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -109,6 +131,8 @@ if __name__ == "__main__":
     test_docs_only_review_is_high_confidence()
     test_extensionless_readme_is_documentation()
     test_build_diff_url_accepts_github_pr_url()
+    test_cli_rejects_post_comment_without_pr()
+    test_cli_rejects_post_comment_without_token()
     test_cli_writes_output_from_diff_file()
     test_claude_sub_agent_contract_is_present()
     print("ok")

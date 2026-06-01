@@ -42,6 +42,16 @@ Write the Markdown review to a file:
 claude-review --pr https://github.com/owner/repo/pull/123 --output review.md
 ```
 
+Post the review as a PR comment:
+
+```bash
+GITHUB_TOKEN=ghp_... claude-review --pr https://github.com/owner/repo/pull/123 --post-comment
+```
+
+The included GitHub Action at `.github/workflows/claude-pr-review.yml` runs the
+same command on pull requests and posts the structured Markdown comment with the
+repository `GITHUB_TOKEN`.
+
 ## Output Format
 
 The generated Markdown contains:
@@ -50,6 +60,7 @@ The generated Markdown contains:
 - Identified risks
 - Improvement suggestions
 - Confidence score: Low, Medium, or High
+- Optional GitHub PR comment URL when `--post-comment` is used
 
 ## Verification
 

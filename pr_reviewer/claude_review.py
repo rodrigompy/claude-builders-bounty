@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import re
 import sys
 import urllib.parse
@@ -358,6 +360,40 @@ def fetch_pr_diff(pr_url: str, timeout: int = 20) -> str:
         return response.read().decode("utf-8", errors="replace")
 
 
+def parse_github_pr_url(pr_url: str) -> tuple[str, str, int]:
+    parsed = urllib.parse.urlparse(pr_url)
+    if parsed.netloc.lower() != "github.com":
+        raise ValueError("Only github.com pull request URLs are supported.")
+
+    parts = [part for part in parsed.path.strip("/").split("/") if part]
+    if len(parts) != 4 or parts[2] != "pull" or not parts[3].isdigit():
+        raise ValueError("Expected a URL like https://github.com/owner/repo/pull/123.")
+
+    owner, repo, _, number = parts
+    return owner, repo, int(number)
+
+
+def post_pr_comment(pr_url: str, body: str, token: str, timeout: int = 20) -> str:
+    owner, repo, number = parse_github_pr_url(pr_url)
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{number}/comments"
+    payload = json.dumps({"body": body}).encode("utf-8")
+    request = urllib.request.Request(
+        api_url,
+        data=payload,
+        method="POST",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "claude-review-agent",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        data = json.loads(response.read().decode("utf-8", errors="replace"))
+    return str(data.get("html_url", ""))
+
+
 def load_diff(args: argparse.Namespace) -> tuple[str, str | None]:
     if args.diff_file:
         path = Path(args.diff_file)
@@ -374,6 +410,16 @@ def make_parser() -> argparse.ArgumentParser:
     source.add_argument("--pr", help="GitHub pull request URL to fetch and review.")
     source.add_argument("--diff-file", help="Local unified diff file to review.")
     parser.add_argument("--output", help="Write Markdown review output to this file.")
+    parser.add_argument(
+        "--post-comment",
+        action="store_true",
+        help="Post the generated Markdown review as a GitHub PR comment. Requires --pr.",
+    )
+    parser.add_argument(
+        "--github-token",
+        default=os.environ.get("GITHUB_TOKEN"),
+        help="GitHub token for --post-comment. Defaults to GITHUB_TOKEN.",
+    )
     return parser
 
 
@@ -381,9 +427,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = make_parser()
     args = parser.parse_args(argv)
 
+    if args.post_comment and not args.pr:
+        parser.error("--post-comment requires --pr.")
+    if args.post_comment and not args.github_token:
+        parser.error("--post-comment requires --github-token or GITHUB_TOKEN.")
+
     try:
         diff_text, source = load_diff(args)
         review = render_markdown(parse_diff(diff_text), source)
+        comment_url = (
+            post_pr_comment(args.pr, review, args.github_token)
+            if args.post_comment
+            else None
+        )
     except (OSError, TimeoutError, ValueError) as exc:
         parser.error(str(exc))
         return 2
@@ -392,6 +448,8 @@ def main(argv: list[str] | None = None) -> int:
         Path(args.output).write_text(review, encoding="utf-8")
     else:
         sys.stdout.write(review)
+    if comment_url:
+        sys.stdout.write(f"\nPosted review comment: {comment_url}\n")
     return 0
 
 

@@ -14,6 +14,8 @@ It supports:
 - `python pr_reviewer/claude_review.py --pr https://github.com/owner/repo/pull/123`
 - `python pr_reviewer/claude_review.py --diff-file samples/octocat-hello-world-6.diff`
 - `--output review.md` for saving the review comment
+- `--post-comment` for posting the review directly to the pull request
+- `.github/workflows/claude-pr-review.yml` for automated review comments on PR events
 
 ## Verification
 
@@ -35,6 +37,7 @@ The included samples were generated from real public GitHub PRs:
 - `claude-review.cmd`
 - `claude-review.ps1`
 - `.claude/agents/pr-reviewer.md`
+- `.github/workflows/claude-pr-review.yml`
 - `pr_reviewer/claude_review.py`
 - `pr_reviewer/test_claude_review.py`
 - `pr_reviewer/README.md`
